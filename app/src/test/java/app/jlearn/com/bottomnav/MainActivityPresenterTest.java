@@ -1,7 +1,11 @@
 package app.jlearn.com.bottomnav;
 
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,21 +19,32 @@ import app.jlearn.com.bottomnav.views.MainActivityView;
 /**
  * Created by gh on 11/5/2017.
  */
+@RunWith(MockitoJUnitRunner.class)
 public class MainActivityPresenterTest {
 
-   
+    @Mock
+    private
+    DataRepository mDataRepository;
+    @Mock
+    private
+    MainActivityView mainActivityView;
+    private MainActivityPresenter mainActivityPresenter;
+    private final List<Data> dataList = Arrays.asList(new Data(), new Data(), new Data());
+
+
+    @Before
+    public void setUp() {
+        mainActivityPresenter = new MainActivityPresenter(mainActivityView, mDataRepository);
+    }
 
     @Test
     public void shouldPassMainActView() {
-        MainActivityView mockMainActivityView = new MockView();
-        DataRepository mockDataRepository = new MockDataRepository(true);
         //given
-        MainActivityPresenter mainActivityPresenter = new MainActivityPresenter(mockMainActivityView, mockDataRepository);
+        Mockito.when(mDataRepository.getData()).thenReturn(dataList);
         //when
         mainActivityPresenter.getData();
-
         //then
-        Assert.assertEquals(true, ((MockView) mockMainActivityView).passedSomeData);
+        Mockito.verify(mainActivityView).displayData(dataList);
 
 
     }
@@ -37,48 +52,13 @@ public class MainActivityPresenterTest {
     @Test
     public void shouldHandleNoData() {
         //given
-        MainActivityView mockView = new MockView();
-        DataRepository mockDataRepository = new MockDataRepository(false);
-
+        Mockito.when(mDataRepository.getData()).thenReturn(Collections.<Data>emptyList());
         //when
-        MainActivityPresenter mainActivityPresenter = new MainActivityPresenter(mockView, mockDataRepository);
         mainActivityPresenter.getData();
         //then
-        Assert.assertEquals(true, ((MockView) mockView).passedNoData);
+        Mockito.verify(mainActivityView).displayNoData();
+
 
     }
 
-    private class MockView implements MainActivityView {
-
-        boolean passedSomeData;
-        boolean passedNoData;
-
-        @Override
-        public void displayData(List<Data> dataList) {
-            if (dataList.size() == 3)
-                passedSomeData = true;
-        }
-
-        @Override
-        public void displayNoData() {
-            passedNoData = true;
-        }
-    }
-
-    private class MockDataRepository implements DataRepository {
-        private boolean shouldReturnSomeData;
-
-        public MockDataRepository(boolean shouldReturnSomeData) {
-            this.shouldReturnSomeData = shouldReturnSomeData;
-        }
-
-        @Override
-        public List<Data> getData() {
-            if (shouldReturnSomeData)
-                return Arrays.asList(new Data(), new Data(), new Data());
-            else {
-                return Collections.emptyList();
-            }
-        }
-    }
 }
